@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: mentoring-platform
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mentoring
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
