@@ -16,6 +16,12 @@ public record RegisterRequest(
         @Size(min = 6, message = "Password should be at least 6 characters")
         String password,
 
+        @NotBlank
+        String firstName,
+
+        @NotBlank
+        String lastName,
+
         @NotNull(message = "Role is required")
         RegistrableRole role
 ) {
