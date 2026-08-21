@@ -3,6 +3,10 @@ package com.github.valdpq.mentoringplatform.auth;
 import com.github.valdpq.mentoringplatform.auth.dto.AuthResponse;
 import com.github.valdpq.mentoringplatform.auth.dto.LoginRequest;
 import com.github.valdpq.mentoringplatform.auth.dto.RegisterRequest;
+import com.github.valdpq.mentoringplatform.mentor.Mentor;
+import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
+import com.github.valdpq.mentoringplatform.student.Student;
+import com.github.valdpq.mentoringplatform.student.StudentRepository;
 import com.github.valdpq.mentoringplatform.user.Role;
 import com.github.valdpq.mentoringplatform.user.User;
 import com.github.valdpq.mentoringplatform.user.UserRepository;
@@ -24,6 +28,8 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final MentorRepository mentorRepository;
+    private final StudentRepository studentRepository;
 
     @Transactional
     public AuthResponse register(RegisterRequest registerRequest) {
@@ -37,6 +43,24 @@ public class AuthService {
                 .role(Role.valueOf(registerRequest.role().name()))
                 .build();
         userRepository.save(user);
+
+        if (registerRequest.role() == RegistrableRole.MENTOR) {
+            Mentor mentor = Mentor.builder()
+                    .user(user)
+                    .firstName(registerRequest.firstName())
+                    .lastName(registerRequest.lastName())
+                    .build();
+
+            mentorRepository.save(mentor);
+        } else {
+            Student student = Student.builder()
+                    .user(user)
+                    .firstName(registerRequest.firstName())
+                    .lastName(registerRequest.lastName())
+                    .build();
+
+            studentRepository.save(student);
+        }
 
         return new AuthResponse(generateTokenFromUser(user));
     }

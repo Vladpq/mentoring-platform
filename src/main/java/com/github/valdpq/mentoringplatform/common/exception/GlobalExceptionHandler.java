@@ -1,6 +1,7 @@
 package com.github.valdpq.mentoringplatform.common.exception;
 
 import com.github.valdpq.mentoringplatform.auth.EmailAlreadyExistsException;
+import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getFieldErrors().forEach(fieldError ->
                 errors.put(fieldError.getField(), fieldError.getDefaultMessage()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(MentorNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMentorNotFound(MentorNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
