@@ -1,5 +1,6 @@
 package com.github.valdpq.mentoringplatform.mentor;
 
+import com.github.valdpq.mentoringplatform.auth.CurrentUserProvider;
 import com.github.valdpq.mentoringplatform.mentor.dto.MentorResponse;
 import com.github.valdpq.mentoringplatform.mentor.dto.UpdateMentorProfileRequest;
 import com.github.valdpq.mentoringplatform.user.User;
@@ -32,14 +33,9 @@ public class MentorService {
 
     @Transactional
     public MentorResponse updateMentorProfile(UpdateMentorProfileRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication instanceof AnonymousAuthenticationToken) {
-            throw new IllegalStateException("No authenticated user found in context");
-        }
 
-        String userEmail = authentication.getName();
+        String userEmail = CurrentUserProvider.getCurrentUserEmail();
+
         User currentUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
