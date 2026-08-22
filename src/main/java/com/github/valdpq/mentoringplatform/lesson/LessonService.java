@@ -8,9 +8,12 @@ import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
 import com.github.valdpq.mentoringplatform.student.Student;
 import com.github.valdpq.mentoringplatform.student.StudentRepository;
+import com.github.valdpq.mentoringplatform.user.Role;
 import com.github.valdpq.mentoringplatform.user.User;
 import com.github.valdpq.mentoringplatform.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,5 +59,25 @@ public class LessonService {
         lessonRepository.save(lesson);
 
         return LessonResponse.fromEntity(lesson);
+    }
+
+    public Page<LessonResponse> getMyLessons(Pageable pageable) {
+
+        String userEmail = CurrentUserProvider.getCurrentUserEmail();
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (user.getRole() == Role.MENTOR) {
+            Mentor mentor = mentorRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new MentorNotFoundException("Mentor not found"));
+            return lessonRepository.findAllByMentor(mentor, pageable)
+                    .map(LessonResponse::fromEntity);
+        } else {
+            Student student = studentRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new IllegalStateException("Student profile not found for user " + user.getId()));
+            return lessonRepository.findAllByStudent(student, pageable)
+                    .map(LessonResponse::fromEntity);
+        }
     }
 }

@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,8 +31,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class LessonServiceTest {
@@ -140,5 +143,89 @@ public class LessonServiceTest {
         assertNotNull(response);
         assertEquals(60, response.durationMinutes());
         verify(lessonRepository).save(any(Lesson.class));
+    }
+
+    @Test
+    public void getMyLessons_shouldReturnMentorLessons_whenUserIsMentor() {
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "mentor@test.com", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        User user = User.builder()
+                .id(1L)
+                .email("mentor@test.com")
+                .role(Role.MENTOR)
+                .build();
+        Mentor mentor = Mentor.builder()
+                .user(user)
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Student student = Student.builder()
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .mentor(mentor)
+                .student(student)
+                .status(LessonStatus.SCHEDULED)
+                .build();
+
+        when(userRepository.findByEmail("mentor@test.com"))
+                .thenReturn(Optional.of(user));
+        when(mentorRepository.findByUserId(1L))
+                .thenReturn(Optional.of(mentor));
+        when(lessonRepository.findAllByMentor(mentor, pageable))
+                .thenReturn(new PageImpl<>(List.of(lesson)));
+
+        Page<LessonResponse> result = lessonService.getMyLessons(pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(lessonRepository, never()).findAllByStudent(any(), any());
+    }
+
+    @Test
+    public void getMyLessons_shouldReturnStudentLessons_whenUserIsStudent() {
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "student@test.com", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        User user = User.builder()
+                .id(1L)
+                .email("student@test.com")
+                .role(Role.STUDENT)
+                .build();
+        Mentor mentor = Mentor.builder()
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Student student = Student.builder()
+                .user(user)
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .mentor(mentor)
+                .student(student)
+                .status(LessonStatus.SCHEDULED)
+                .build();
+
+        when(userRepository.findByEmail("student@test.com"))
+                .thenReturn(Optional.of(user));
+        when(studentRepository.findByUserId(1L))
+                .thenReturn(Optional.of(student));
+        when(lessonRepository.findAllByStudent(student, pageable))
+                .thenReturn(new PageImpl<>(List.of(lesson)));
+
+        Page<LessonResponse> result = lessonService.getMyLessons(pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(lessonRepository, never()).findAllByMentor(any(), any());
     }
 }
