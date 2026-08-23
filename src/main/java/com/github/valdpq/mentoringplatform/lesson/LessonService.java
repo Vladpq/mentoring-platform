@@ -4,6 +4,8 @@ import com.github.valdpq.mentoringplatform.auth.CurrentUserProvider;
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.LessonResponse;
 import com.github.valdpq.mentoringplatform.lesson.dto.UpdateLessonStatusRequest;
+import com.github.valdpq.mentoringplatform.lesson.event.LessonCompletedEvent;
+import com.github.valdpq.mentoringplatform.lesson.event.LessonEventProducer;
 import com.github.valdpq.mentoringplatform.mentor.Mentor;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
@@ -30,6 +32,7 @@ public class LessonService {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final MentorRepository mentorRepository;
+    private final LessonEventProducer lessonEventProducer;
 
     @Transactional
     public LessonResponse bookLesson(CreateLessonRequest request) {
@@ -109,6 +112,11 @@ public class LessonService {
 
         lesson.setStatus(request.newStatus());
         lessonRepository.save(lesson);
+
+        if (lesson.getStatus() == LessonStatus.COMPLETED) {
+            lessonEventProducer.publishLessonCompleted(
+                    new LessonCompletedEvent(lesson.getId(), lesson.getMentor().getId(), lesson.getStudent().getId()));
+        }
 
         return LessonResponse.fromEntity(lesson);
     }
