@@ -3,6 +3,8 @@ package com.github.valdpq.mentoringplatform.lesson;
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.LessonResponse;
 import com.github.valdpq.mentoringplatform.lesson.dto.UpdateLessonStatusRequest;
+import com.github.valdpq.mentoringplatform.lesson.event.LessonCompletedEvent;
+import com.github.valdpq.mentoringplatform.lesson.event.LessonEventProducer;
 import com.github.valdpq.mentoringplatform.mentor.Mentor;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
@@ -48,6 +50,9 @@ public class LessonServiceTest {
 
     @Mock
     private MentorRepository mentorRepository;
+
+    @Mock
+    private LessonEventProducer lessonEventProducer;
 
     @InjectMocks
     private LessonService lessonService;
@@ -364,5 +369,53 @@ public class LessonServiceTest {
         assertNotNull(response);
         assertEquals(LessonStatus.CANCELLED, response.status());
         verify(lessonRepository).save(any(Lesson.class));
+        verify(lessonEventProducer, never()).publishLessonCompleted(any(LessonCompletedEvent.class));
+    }
+
+    @Test
+    public void changeLessonStatus_shouldSendKafkaEvent_whenLessonIsCompleted() {
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "mentor@test.com", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = User.builder()
+                .id(1L)
+                .email("mentor@test.com")
+                .role(Role.MENTOR)
+                .build();
+        Mentor mentor = Mentor.builder()
+                .id(1L)
+                .user(user)
+                .firstName("first")
+                .lastName("last")
+                .build();
+
+        Student student = Student.builder()
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .id(1L)
+                .mentor(mentor)
+                .student(student)
+                .status(LessonStatus.SCHEDULED)
+                .build();
+
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.COMPLETED);
+
+        when(userRepository.findByEmail("mentor@test.com"))
+                .thenReturn(Optional.of(user));
+        when(mentorRepository.findByUserId(1L))
+                .thenReturn(Optional.of(mentor));
+        when(lessonRepository.findById(1L))
+                .thenReturn(Optional.of(lesson));
+
+        LessonResponse response = lessonService.changeLessonStatus(1L, request);
+
+        assertNotNull(response);
+        assertEquals(LessonStatus.COMPLETED, response.status());
+        verify(lessonRepository).save(any(Lesson.class));
+        verify(lessonEventProducer).publishLessonCompleted(any(LessonCompletedEvent.class));
     }
 }
