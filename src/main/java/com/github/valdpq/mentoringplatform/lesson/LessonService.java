@@ -102,7 +102,7 @@ public class LessonService {
             throw new InvalidSessionOwnerException("Cannot change status of someone else's lesson");
         }
 
-        if (lesson.getStatus() == LessonStatus.CANCELED || lesson.getStatus() == LessonStatus.COMPLETED) {
+        if (lesson.getStatus() == LessonStatus.CANCELLED || lesson.getStatus() == LessonStatus.COMPLETED) {
             throw new IllegalLessonStatusTransitionException(
                     "Cannot change status of a " + lesson.getStatus() + " lesson");
         }

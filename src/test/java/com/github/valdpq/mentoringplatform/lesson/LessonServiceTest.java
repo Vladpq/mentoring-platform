@@ -264,7 +264,7 @@ public class LessonServiceTest {
                 .status(LessonStatus.SCHEDULED)
                 .build();
 
-        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELED);
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELLED);
 
         when(userRepository.findByEmail("mentor@test.com"))
                 .thenReturn(Optional.of(user));
@@ -307,7 +307,7 @@ public class LessonServiceTest {
                 .status(LessonStatus.COMPLETED)
                 .build();
 
-        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELED);
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELLED);
 
         when(userRepository.findByEmail("mentor@test.com"))
                 .thenReturn(Optional.of(user));
@@ -350,7 +350,7 @@ public class LessonServiceTest {
                 .status(LessonStatus.SCHEDULED)
                 .build();
 
-        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELED);
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELLED);
 
         when(userRepository.findByEmail("mentor@test.com"))
                 .thenReturn(Optional.of(user));
@@ -362,7 +362,7 @@ public class LessonServiceTest {
         LessonResponse response = lessonService.changeLessonStatus(1L, request);
 
         assertNotNull(response);
-        assertEquals(LessonStatus.CANCELED, response.status());
+        assertEquals(LessonStatus.CANCELLED, response.status());
         verify(lessonRepository).save(any(Lesson.class));
     }
 }
