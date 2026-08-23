@@ -1,9 +1,15 @@
 package com.github.valdpq.mentoringplatform.common.exception;
 
 import com.github.valdpq.mentoringplatform.auth.EmailAlreadyExistsException;
+import com.github.valdpq.mentoringplatform.lesson.IllegalLessonStatusTransitionException;
+import com.github.valdpq.mentoringplatform.lesson.InvalidSessionOwnerException;
+import com.github.valdpq.mentoringplatform.lesson.LessonNotFoundException;
+import com.github.valdpq.mentoringplatform.lesson.LessonOverlapException;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
+import com.github.valdpq.mentoringplatform.student.StudentNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +43,36 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MentorNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMentorNotFound(MentorNotFoundException e) {
         return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(StudentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMentorNotFound(StudentNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(LessonNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLessonNotFound(LessonNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(LessonOverlapException.class)
+    public ResponseEntity<ErrorResponse> handleLessonOverlap(LessonOverlapException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalLessonStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalLessonStatusTransition(IllegalLessonStatusTransitionException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Access denied: insufficient permissions");
+    }
+
+    @ExceptionHandler(InvalidSessionOwnerException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSessionOwner(InvalidSessionOwnerException e) {
+        return buildResponse(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
