@@ -6,6 +6,7 @@ import com.github.valdpq.mentoringplatform.lesson.InvalidSessionOwnerException;
 import com.github.valdpq.mentoringplatform.lesson.LessonNotFoundException;
 import com.github.valdpq.mentoringplatform.lesson.LessonOverlapException;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
+import com.github.valdpq.mentoringplatform.student.StudentNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -41,6 +42,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MentorNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMentorNotFound(MentorNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(StudentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMentorNotFound(StudentNotFoundException e) {
         return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 

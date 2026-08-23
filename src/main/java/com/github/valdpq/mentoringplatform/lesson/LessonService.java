@@ -8,6 +8,7 @@ import com.github.valdpq.mentoringplatform.mentor.Mentor;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
 import com.github.valdpq.mentoringplatform.student.Student;
+import com.github.valdpq.mentoringplatform.student.StudentNotFoundException;
 import com.github.valdpq.mentoringplatform.student.StudentRepository;
 import com.github.valdpq.mentoringplatform.user.Role;
 import com.github.valdpq.mentoringplatform.user.User;
@@ -39,7 +40,7 @@ public class LessonService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Student student = studentRepository.findByUserId(currentUser.getId())
-                .orElseThrow(() -> new IllegalStateException("Student profile not found for user " + currentUser.getId()));
+                .orElseThrow(() -> new StudentNotFoundException("Student not found"));
 
         Mentor mentor = mentorRepository.findByIdForUpdate(request.mentorId())
                 .orElseThrow(() -> new MentorNotFoundException("Mentor not found"));
@@ -78,7 +79,7 @@ public class LessonService {
                     .map(LessonResponse::fromEntity);
         } else {
             Student student = studentRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new IllegalStateException("Student profile not found for user " + user.getId()));
+                    .orElseThrow(() -> new StudentNotFoundException("Student not found"));
             return lessonRepository.findAllByStudent(student, pageable)
                     .map(LessonResponse::fromEntity);
         }
