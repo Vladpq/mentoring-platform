@@ -1,6 +1,9 @@
 package com.github.valdpq.mentoringplatform.common.exception;
 
 import com.github.valdpq.mentoringplatform.auth.EmailAlreadyExistsException;
+import com.github.valdpq.mentoringplatform.lesson.IllegalLessonStatusTransitionException;
+import com.github.valdpq.mentoringplatform.lesson.InvalidSessionOwnerException;
+import com.github.valdpq.mentoringplatform.lesson.LessonNotFoundException;
 import com.github.valdpq.mentoringplatform.lesson.LessonOverlapException;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -41,14 +44,29 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
+    @ExceptionHandler(LessonNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLessonNotFound(LessonNotFoundException e) {
+        return buildResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
     @ExceptionHandler(LessonOverlapException.class)
     public ResponseEntity<ErrorResponse> handleLessonOverlap(LessonOverlapException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalLessonStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalLessonStatusTransition(IllegalLessonStatusTransitionException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied: insufficient permissions");
+    }
+
+    @ExceptionHandler(InvalidSessionOwnerException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSessionOwner(InvalidSessionOwnerException e) {
+        return buildResponse(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

@@ -2,6 +2,7 @@ package com.github.valdpq.mentoringplatform.lesson;
 
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.LessonResponse;
+import com.github.valdpq.mentoringplatform.lesson.dto.UpdateLessonStatusRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,5 +29,12 @@ public class LessonController {
     @PreAuthorize("hasAnyRole('STUDENT', 'MENTOR')")
     public ResponseEntity<Page<LessonResponse>> getMyLessons(Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(lessonService.getMyLessons(pageable));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('MENTOR')")
+    public ResponseEntity<LessonResponse> changeLessonStatus(@PathVariable Long id,
+                                                             @Valid @RequestBody UpdateLessonStatusRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(lessonService.changeLessonStatus(id, request));
     }
 }

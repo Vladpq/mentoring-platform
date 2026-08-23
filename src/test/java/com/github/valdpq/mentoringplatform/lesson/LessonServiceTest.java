@@ -2,6 +2,7 @@ package com.github.valdpq.mentoringplatform.lesson;
 
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.LessonResponse;
+import com.github.valdpq.mentoringplatform.lesson.dto.UpdateLessonStatusRequest;
 import com.github.valdpq.mentoringplatform.mentor.Mentor;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
@@ -227,5 +228,141 @@ public class LessonServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         verify(lessonRepository, never()).findAllByMentor(any(), any());
+    }
+
+    @Test
+    public void changeLessonStatus_shouldThrowInvalidSessionOwnerException_whenWrongOwner() {
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "mentor@test.com", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = User.builder()
+                .id(1L)
+                .email("mentor@test.com")
+                .role(Role.MENTOR)
+                .build();
+        Mentor mentor = Mentor.builder()
+                .id(1L)
+                .user(user)
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Mentor owner = Mentor.builder()
+                .id(2L)
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Student student = Student.builder()
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .id(1L)
+                .mentor(owner)
+                .student(student)
+                .status(LessonStatus.SCHEDULED)
+                .build();
+
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELED);
+
+        when(userRepository.findByEmail("mentor@test.com"))
+                .thenReturn(Optional.of(user));
+        when(mentorRepository.findByUserId(1L))
+                .thenReturn(Optional.of(mentor));
+        when(lessonRepository.findById(1L))
+                .thenReturn(Optional.of(lesson));
+
+        assertThrows(InvalidSessionOwnerException.class,
+                () -> lessonService.changeLessonStatus(1L, request));
+    }
+
+    @Test
+    public void changeLessonStatus_shouldIllegalLessonStatusTransitionException_whenStatusIsLocked() {
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "mentor@test.com", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = User.builder()
+                .id(1L)
+                .email("mentor@test.com")
+                .role(Role.MENTOR)
+                .build();
+        Mentor mentor = Mentor.builder()
+                .id(1L)
+                .user(user)
+                .firstName("first")
+                .lastName("last")
+                .build();
+
+        Student student = Student.builder()
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .id(1L)
+                .mentor(mentor)
+                .student(student)
+                .status(LessonStatus.COMPLETED)
+                .build();
+
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELED);
+
+        when(userRepository.findByEmail("mentor@test.com"))
+                .thenReturn(Optional.of(user));
+        when(mentorRepository.findByUserId(1L))
+                .thenReturn(Optional.of(mentor));
+        when(lessonRepository.findById(1L))
+                .thenReturn(Optional.of(lesson));
+
+        assertThrows(IllegalLessonStatusTransitionException.class,
+                () -> lessonService.changeLessonStatus(1L, request));
+    }
+
+    @Test
+    public void changeLessonStatus_shouldReturnLessonWithNewStatus_whenStatusIsChanged() {
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                "mentor@test.com", null, List.of());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = User.builder()
+                .id(1L)
+                .email("mentor@test.com")
+                .role(Role.MENTOR)
+                .build();
+        Mentor mentor = Mentor.builder()
+                .id(1L)
+                .user(user)
+                .firstName("first")
+                .lastName("last")
+                .build();
+
+        Student student = Student.builder()
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .id(1L)
+                .mentor(mentor)
+                .student(student)
+                .status(LessonStatus.SCHEDULED)
+                .build();
+
+        UpdateLessonStatusRequest request = new UpdateLessonStatusRequest(LessonStatus.CANCELED);
+
+        when(userRepository.findByEmail("mentor@test.com"))
+                .thenReturn(Optional.of(user));
+        when(mentorRepository.findByUserId(1L))
+                .thenReturn(Optional.of(mentor));
+        when(lessonRepository.findById(1L))
+                .thenReturn(Optional.of(lesson));
+
+        LessonResponse response = lessonService.changeLessonStatus(1L, request);
+
+        assertNotNull(response);
+        assertEquals(LessonStatus.CANCELED, response.status());
+        verify(lessonRepository).save(any(Lesson.class));
     }
 }

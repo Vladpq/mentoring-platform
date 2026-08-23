@@ -3,6 +3,7 @@ package com.github.valdpq.mentoringplatform.lesson;
 import com.github.valdpq.mentoringplatform.auth.CurrentUserProvider;
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.LessonResponse;
+import com.github.valdpq.mentoringplatform.lesson.dto.UpdateLessonStatusRequest;
 import com.github.valdpq.mentoringplatform.mentor.Mentor;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -79,5 +82,33 @@ public class LessonService {
             return lessonRepository.findAllByStudent(student, pageable)
                     .map(LessonResponse::fromEntity);
         }
+    }
+
+    @Transactional
+    public LessonResponse changeLessonStatus(Long lessonId, UpdateLessonStatusRequest request) {
+        String userEmail = CurrentUserProvider.getCurrentUserEmail();
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Mentor mentor = mentorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new MentorNotFoundException("Mentor not found"));
+
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new LessonNotFoundException("Lesson not found"));
+
+        if (!Objects.equals(lesson.getMentor().getId(), mentor.getId())) {
+            throw new InvalidSessionOwnerException("Cannot change status of someone else's lesson");
+        }
+
+        if (lesson.getStatus() == LessonStatus.CANCELED || lesson.getStatus() == LessonStatus.COMPLETED) {
+            throw new IllegalLessonStatusTransitionException(
+                    "Cannot change status of a " + lesson.getStatus() + " lesson");
+        }
+
+        lesson.setStatus(request.newStatus());
+        lessonRepository.save(lesson);
+
+        return LessonResponse.fromEntity(lesson);
     }
 }
