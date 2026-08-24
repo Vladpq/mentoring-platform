@@ -13,6 +13,8 @@ import com.github.valdpq.mentoringplatform.student.StudentRepository;
 import com.github.valdpq.mentoringplatform.user.User;
 import com.github.valdpq.mentoringplatform.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +72,15 @@ public class ReviewService {
         mentor.setAvgRating(reviewRepository.calculateAvgRating(mentor));
         mentorRepository.save(mentor);
 
-        return ReviewResponse.formEntity(review);
+        return ReviewResponse.fromEntity(review);
+    }
+
+    public Page<ReviewResponse> getMentorReviews(Long mentorId, Pageable pageable) {
+
+        Mentor mentor = mentorRepository.findById(mentorId)
+                .orElseThrow(() -> new MentorNotFoundException("Mentor not found"));
+
+        return reviewRepository.getAllByLessonMentor(mentor, pageable)
+                .map(ReviewResponse::fromEntity);
     }
 }

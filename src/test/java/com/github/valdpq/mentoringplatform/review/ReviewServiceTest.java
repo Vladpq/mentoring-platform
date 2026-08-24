@@ -2,6 +2,7 @@ package com.github.valdpq.mentoringplatform.review;
 
 import com.github.valdpq.mentoringplatform.lesson.*;
 import com.github.valdpq.mentoringplatform.mentor.Mentor;
+import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
 import com.github.valdpq.mentoringplatform.mentor.MentorRepository;
 import com.github.valdpq.mentoringplatform.review.dto.CreateReviewRequest;
 import com.github.valdpq.mentoringplatform.review.dto.ReviewResponse;
@@ -16,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -263,5 +268,55 @@ public class ReviewServiceTest {
         verify(mentorRepository).save(any(Mentor.class));
         verify(mentorRepository).findByIdForUpdate(anyLong());
         assertEquals(0, BigDecimal.valueOf(4.00).compareTo(mentor.getAvgRating()));
+    }
+
+    @Test
+    public void getMentorReviews_shouldThrowMentorNotFoundException_whenMentorDoesNotExists() {
+
+        when(mentorRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(MentorNotFoundException.class,
+                () -> reviewService.getMentorReviews(999L, PageRequest.of(0, 10)));
+    }
+
+    @Test
+    public void getMentorReviews_shouldReturnReviewsPage_whenFindingMentorReviews() {
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Mentor mentor = Mentor.builder()
+                .id(1L)
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Student student = Student.builder()
+                .id(1L)
+                .firstName("first")
+                .lastName("last")
+                .build();
+        Lesson lesson = Lesson.builder()
+                .id(1L)
+                .mentor(mentor)
+                .student(student)
+                .status(LessonStatus.COMPLETED)
+                .build();
+        Review review = Review.builder()
+                .id(1L)
+                .lesson(lesson)
+                .build();
+
+        List<Review> reviewList = List.of(review);
+        Page<Review> page = new PageImpl<>(reviewList);
+        when(mentorRepository.findById(1L))
+                .thenReturn(Optional.of(mentor));
+        when(reviewRepository.getAllByLessonMentor(mentor, pageable))
+                .thenReturn(page);
+
+        Page<ReviewResponse> result = reviewService.getMentorReviews(1L, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(reviewRepository).getAllByLessonMentor(mentor, pageable);
     }
 }

@@ -13,7 +13,7 @@ public record ReviewResponse(
         LocalDateTime createdAt
 ) {
 
-    public static ReviewResponse formEntity(Review review) {
+    public static ReviewResponse fromEntity(Review review) {
         return new ReviewResponse(
                 review.getId(),
                 review.getLesson().getId(),
