@@ -3,6 +3,9 @@ package com.github.valdpq.mentoringplatform.lesson;
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.LessonResponse;
 import com.github.valdpq.mentoringplatform.lesson.dto.UpdateLessonStatusRequest;
+import com.github.valdpq.mentoringplatform.review.ReviewService;
+import com.github.valdpq.mentoringplatform.review.dto.CreateReviewRequest;
+import com.github.valdpq.mentoringplatform.review.dto.ReviewResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class LessonController {
 
     private final LessonService lessonService;
+    private final ReviewService reviewService;
 
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
@@ -36,5 +40,12 @@ public class LessonController {
     public ResponseEntity<LessonResponse> changeLessonStatus(@PathVariable Long id,
                                                              @Valid @RequestBody UpdateLessonStatusRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(lessonService.changeLessonStatus(id, request));
+    }
+
+    @PostMapping("/{lessonId}/review")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ReviewResponse> createReview(@PathVariable Long lessonId,
+                                                       @Valid @RequestBody CreateReviewRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(reviewService.createReview(lessonId, request));
     }
 }

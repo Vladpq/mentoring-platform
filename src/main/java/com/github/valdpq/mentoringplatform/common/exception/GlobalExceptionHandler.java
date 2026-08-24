@@ -6,6 +6,8 @@ import com.github.valdpq.mentoringplatform.lesson.InvalidSessionOwnerException;
 import com.github.valdpq.mentoringplatform.lesson.LessonNotFoundException;
 import com.github.valdpq.mentoringplatform.lesson.LessonOverlapException;
 import com.github.valdpq.mentoringplatform.mentor.MentorNotFoundException;
+import com.github.valdpq.mentoringplatform.review.LessonNotCompletedException;
+import com.github.valdpq.mentoringplatform.review.ReviewAlreadyExistsException;
 import com.github.valdpq.mentoringplatform.student.StudentNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,6 +64,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalLessonStatusTransitionException.class)
     public ResponseEntity<ErrorResponse> handleIllegalLessonStatusTransition(IllegalLessonStatusTransitionException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(LessonNotCompletedException.class)
+    public ResponseEntity<ErrorResponse> handleLessonNotCompleted(LessonNotCompletedException e) {
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleReviewAlreadyExists(ReviewAlreadyExistsException e) {
         return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
