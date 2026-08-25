@@ -5,6 +5,7 @@ import com.github.valdpq.mentoringplatform.student.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,4 +31,8 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     @Query("SELECT l FROM Lesson l JOIN FETCH l.mentor JOIN FETCH l.student WHERE l.student = :student")
     Page<Lesson> findAllByStudent(@Param("student") Student student, Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Lesson l SET l.reviewReminderSent = true WHERE l.id = :lessonId")
+    void markReviewReminderSent(@Param("lessonId") Long lessonId);
 }

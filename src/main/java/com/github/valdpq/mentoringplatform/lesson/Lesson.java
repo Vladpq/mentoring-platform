@@ -45,6 +45,10 @@ public class Lesson {
     @Column(nullable = false)
     private LessonStatus status = LessonStatus.SCHEDULED;
 
+    @Builder.Default
+    @Column(name = "review_reminder_sent", nullable = false)
+    private Boolean reviewReminderSent = false;
+
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private LocalDateTime createdAt;
 
