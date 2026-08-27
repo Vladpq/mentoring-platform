@@ -1,5 +1,6 @@
 package com.github.valdpq.mentoringplatform.lesson;
 
+import com.github.valdpq.mentoringplatform.TestcontainersConfiguration;
 import com.github.valdpq.mentoringplatform.auth.dto.AuthResponse;
 import com.github.valdpq.mentoringplatform.auth.dto.LoginRequest;
 import com.github.valdpq.mentoringplatform.lesson.dto.CreateLessonRequest;
@@ -24,7 +25,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.utility.TestcontainersConfiguration;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
